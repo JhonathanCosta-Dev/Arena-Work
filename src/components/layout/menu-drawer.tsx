@@ -17,6 +17,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { Avatar } from '@/components/ui/avatar';
+import { BadLoserTag } from '@/components/ui/bad-loser-tag';
 import { logoutAction } from '@/features/auth/actions/logout';
 
 export type LeaderboardEntry = {
@@ -27,6 +28,7 @@ export type LeaderboardEntry = {
   wins: number;
   losses: number;
   avatarUrl: string | null;
+  badLoser: boolean;
 };
 
 type MenuDrawerProps = {
@@ -140,6 +142,11 @@ export function MenuDrawer({
                           <span className="block truncate text-sm font-bold">
                             {row.name}
                             {isYou ? <span className="text-muted-foreground"> (você)</span> : null}
+                            {row.badLoser ? (
+                              <span className="ml-1 align-middle">
+                                <BadLoserTag compact />
+                              </span>
+                            ) : null}
                           </span>
                           <span className="text-muted-foreground block text-[11px]">
                             {row.wins}V · {row.losses}D

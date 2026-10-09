@@ -10,6 +10,8 @@ export type Database = {
           email: string;
           avatar_path: string | null;
           banner_path: string | null;
+          bad_loser: boolean;
+          bad_loser_since: string | null;
           role: Database['public']['Enums']['app_role'];
           is_active: boolean;
           created_at: string;
@@ -401,6 +403,8 @@ export type Database = {
         Args: { p_name: string | null; p_icon_path: string | null; p_banner_path: string | null };
         Returns: undefined;
       };
+      admin_clear_bad_loser: { Args: { p_profile_id: string }; Returns: undefined };
+      mark_all_notifications_read: { Args: Record<PropertyKey, never>; Returns: undefined };
       admin_set_profile_active: {
         Args: { p_profile_id: string; p_active: boolean };
         Returns: undefined;
@@ -429,7 +433,7 @@ export type Database = {
     Enums: {
       app_role: 'employee' | 'admin';
       season_status: 'scheduled' | 'active' | 'finished';
-      match_status: 'pending_confirmation' | 'confirmed' | 'disputed' | 'cancelled';
+      match_status: 'pending_confirmation' | 'confirmed' | 'disputed' | 'cancelled' | 'drawn';
     };
     CompositeTypes: Record<string, never>;
   };

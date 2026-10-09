@@ -6,6 +6,7 @@ const statusLabel: Record<MatchSummary['status'], { text: string; className: str
   confirmed: { text: 'Confirmada', className: 'text-success' },
   disputed: { text: 'Em disputa', className: 'text-danger' },
   cancelled: { text: 'Cancelada', className: 'text-muted-foreground' },
+  drawn: { text: 'Empate pendente', className: 'text-warning' },
 };
 
 export function MatchCard({
@@ -29,9 +30,18 @@ export function MatchCard({
         </time>
       </div>
       <div className="mt-3 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-        <PlayerScore player={a} isYou={a.profileId === currentUserId} />
+        <PlayerScore
+          player={a}
+          isYou={a.profileId === currentUserId}
+          isWinner={a.score > b.score}
+        />
         <span className="text-muted-foreground font-mono text-sm">×</span>
-        <PlayerScore player={b} isYou={b.profileId === currentUserId} reversed />
+        <PlayerScore
+          player={b}
+          isYou={b.profileId === currentUserId}
+          isWinner={b.score > a.score}
+          reversed
+        />
       </div>
       {children}
     </article>
@@ -41,10 +51,12 @@ export function MatchCard({
 function PlayerScore({
   player,
   isYou,
+  isWinner,
   reversed = false,
 }: {
   player: MatchSummary['players'][number];
   isYou: boolean;
+  isWinner: boolean;
   reversed?: boolean;
 }) {
   return (
@@ -52,7 +64,7 @@ function PlayerScore({
       className={`flex min-w-0 items-center gap-3 ${reversed ? 'flex-row-reverse text-right' : ''}`}
     >
       <span
-        className={`font-mono text-3xl font-black ${player.score === 2 ? 'text-white' : 'text-muted-foreground'}`}
+        className={`font-mono text-3xl font-black ${isWinner ? 'text-white' : 'text-muted-foreground'}`}
       >
         {player.score}
       </span>

@@ -4,7 +4,7 @@ import { MyStanding } from '@/features/dashboard/components/my-standing';
 import { Podium } from '@/features/dashboard/components/podium';
 import { SeasonHero } from '@/features/dashboard/components/season-hero';
 import { getCompany } from '@/features/company/server/get-company';
-import { bestStreakHolder } from '@/features/dashboard/domain/insights';
+import { bestStreakHolder, seasonProgress } from '@/features/dashboard/domain/insights';
 import { MatchCard } from '@/features/matches/components/match-card';
 import {
   countPendingConfirmations,
@@ -12,6 +12,7 @@ import {
 } from '@/features/matches/server/get-season-matches';
 import { getCurrentRanking } from '@/features/ranking/server/get-current-ranking';
 import { requireUser } from '@/lib/auth/require-user';
+import { formatDate } from '@/lib/dates';
 
 export default async function DashboardPage() {
   const { userId, profile, supabase } = await requireUser();
@@ -27,6 +28,9 @@ export default async function DashboardPage() {
   const confirmedTotal = ranking.reduce((sum, row) => sum + row.matches, 0) / 2;
   const streak = bestStreakHolder(ranking);
   const playing = ranking.filter((row) => row.matches > 0).length;
+  const registerWindow = season
+    ? seasonProgress(season.starts_at, season.ends_at)
+    : { hasStarted: false, hasEnded: false };
 
   return (
     <div className="space-y-4 md:space-y-6">
@@ -58,12 +62,21 @@ export default async function DashboardPage() {
       ) : null}
 
       {season ? (
-        <Link
-          href="/matches/new"
-          className="bg-primary flex min-h-16 items-center justify-center gap-3 rounded-2xl px-6 text-base font-black text-white shadow-[0_14px_40px_rgba(255,0,0,.18)] transition hover:brightness-110"
-        >
-          <Swords className="size-5" aria-hidden="true" /> Registrar partida
-        </Link>
+        registerWindow.hasStarted && !registerWindow.hasEnded ? (
+          <Link
+            href="/matches/new"
+            className="bg-primary flex min-h-16 items-center justify-center gap-3 rounded-2xl px-6 text-base font-black text-white shadow-[0_14px_40px_rgba(255,0,0,.18)] transition hover:brightness-110"
+          >
+            <Swords className="size-5" aria-hidden="true" /> Registrar partida
+          </Link>
+        ) : (
+          <div className="border-border bg-card text-muted-foreground flex min-h-16 items-center justify-center gap-3 rounded-2xl border px-6 text-center text-sm font-bold">
+            <Swords className="size-5 shrink-0" aria-hidden="true" />
+            {registerWindow.hasStarted
+              ? 'Prazo da temporada encerrado. Aguarde a próxima.'
+              : `Partidas liberadas a partir de ${formatDate(season.starts_at)}`}
+          </div>
+        )
       ) : null}
 
       {season ? (

@@ -11,10 +11,11 @@ type AppShellProps = {
   seasonName: string | null;
   leaderboard: LeaderboardEntry[];
   pendingCount: number;
+  unreadCount: number;
   company: { name: string | null; iconUrl: string | null };
 };
 
-export function AppShell({ children, userId, ...menu }: AppShellProps) {
+export function AppShell({ children, userId, unreadCount, ...menu }: AppShellProps) {
   return (
     <div className="bg-background text-foreground min-h-dvh">
       <header className="border-border/80 bg-background/95 sticky top-0 z-30 border-b backdrop-blur">
@@ -29,10 +30,15 @@ export function AppShell({ children, userId, ...menu }: AppShellProps) {
           <div className="flex items-center gap-2">
             <Link
               href="/notifications"
-              aria-label="Notificações"
-              className="border-border text-muted-foreground focus-visible:ring-primary rounded-full border p-2 hover:text-white focus-visible:ring-2 focus-visible:outline-none"
+              aria-label={unreadCount ? `Notificações (${unreadCount} não lidas)` : 'Notificações'}
+              className="border-border text-muted-foreground focus-visible:ring-primary relative rounded-full border p-2 hover:text-white focus-visible:ring-2 focus-visible:outline-none"
             >
-              <Bell className="size-4" />
+              <Bell className={`size-4 ${unreadCount ? 'text-white' : ''}`} />
+              {unreadCount ? (
+                <span className="bg-primary absolute -top-1 -right-1 grid min-w-4 place-items-center rounded-full px-1 text-[10px] leading-4 font-black text-white">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              ) : null}
             </Link>
             <MenuDrawer userId={userId} {...menu} />
           </div>

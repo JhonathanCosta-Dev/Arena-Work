@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { Pencil } from 'lucide-react';
 import { z } from 'zod';
 import { Avatar } from '@/components/ui/avatar';
+import { BadLoserTag } from '@/components/ui/bad-loser-tag';
 import { MatchCard } from '@/features/matches/components/match-card';
 import { getSeasonMatches } from '@/features/matches/server/get-season-matches';
 import { ProfileEditForm } from '@/features/profile/components/profile-edit-form';
@@ -18,7 +19,7 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
   const [{ data: player }, { season, ranking }] = await Promise.all([
     supabase
       .from('profiles')
-      .select('id, name, role, avatar_path, banner_path')
+      .select('id, name, role, avatar_path, banner_path, bad_loser')
       .eq('id', id)
       .maybeSingle(),
     getCurrentRanking(supabase),
@@ -73,7 +74,13 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
                 ADMIN
               </span>
             ) : null}
+            {player.bad_loser ? <BadLoserTag /> : null}
           </div>
+          {player.bad_loser ? (
+            <p className="text-muted-foreground mt-1 text-xs">
+              Recusou um resultado. Só um administrador pode remover a tag.
+            </p>
+          ) : null}
           {season ? (
             <p className="text-muted-foreground mt-1 text-sm">Temporada {season.name}</p>
           ) : null}

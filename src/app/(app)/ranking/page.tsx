@@ -1,3 +1,4 @@
+import { BadLoserTag } from '@/components/ui/bad-loser-tag';
 import { getCurrentRanking } from '@/features/ranking/server/get-current-ranking';
 import { requireUser } from '@/lib/auth/require-user';
 
@@ -19,7 +20,10 @@ export default async function RankingPage() {
               #{row.position}
             </span>
             <div>
-              <div className="font-bold">{row.profile?.name ?? 'Jogador'}</div>
+              <div className="flex flex-wrap items-center gap-2 font-bold">
+                {row.profile?.name ?? 'Jogador'}
+                {row.profile?.bad_loser ? <BadLoserTag /> : null}
+              </div>
               <div className="text-muted-foreground mt-1 text-xs">
                 {row.wins}V · {row.losses}D · {(row.winRate * 100).toFixed(1)}%
               </div>

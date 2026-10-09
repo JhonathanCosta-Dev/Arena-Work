@@ -19,7 +19,7 @@ export const getCurrentRanking = cache(async function getCurrentRanking(
   if (!season) return { season: null, ranking: [] };
 
   const [{ data: profiles }, { data: matches, error }] = await Promise.all([
-    supabase.from('profiles').select('id, name, avatar_path').eq('is_active', true),
+    supabase.from('profiles').select('id, name, avatar_path, bad_loser').eq('is_active', true),
     supabase
       .from('matches')
       .select(

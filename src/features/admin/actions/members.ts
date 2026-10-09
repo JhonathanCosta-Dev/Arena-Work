@@ -31,3 +31,18 @@ export async function setMemberActiveAction(
   revalidatePath('/', 'layout');
   return { ok: true, message: parsed.data.active ? 'Acesso liberado.' : 'Acesso desativado.' };
 }
+
+export async function clearBadLoserAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const parsed = z.uuid().safeParse(formData.get('profileId'));
+  if (!parsed.success) return { ok: false, message: 'Dados inválidos.' };
+
+  const { supabase } = await requireAdmin();
+  const { error } = await supabase.rpc('admin_clear_bad_loser', { p_profile_id: parsed.data });
+  if (error) return { ok: false, message: rpcErrorMessage(error) };
+
+  revalidatePath('/', 'layout');
+  return { ok: true, message: 'Tag removida.' };
+}

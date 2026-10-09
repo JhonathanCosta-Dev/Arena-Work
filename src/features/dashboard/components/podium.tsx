@@ -1,9 +1,12 @@
 import Link from 'next/link';
 import { Avatar } from '@/components/ui/avatar';
+import { BadLoserTag } from '@/components/ui/bad-loser-tag';
 import type { RankedRow } from '@/features/ranking/domain/ranking';
 import { MEDIA_BUCKETS, mediaUrl } from '@/lib/storage/media';
 
-type Row = RankedRow & { profile: { name: string; avatar_path: string | null } | null };
+type Row = RankedRow & {
+  profile: { name: string; avatar_path: string | null; bad_loser: boolean } | null;
+};
 
 // Visual order 2º · 1º · 3º, each step with its own height.
 const steps = [
@@ -45,6 +48,11 @@ export function Podium({ ranking, userId }: { ranking: Row[]; userId: string }) 
                       {row.playerId === userId ? 'Você' : (row.profile?.name ?? 'Jogador')}
                     </div>
                     <div className="text-muted-foreground font-mono text-xs">{row.points} pts</div>
+                    {row.profile?.bad_loser ? (
+                      <div className="mt-1">
+                        <BadLoserTag compact />
+                      </div>
+                    ) : null}
                   </Link>
                 ) : (
                   <div className="text-muted-foreground text-sm">—</div>

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { validatePingPongScore } from '../domain/score';
 
 export const createMatchSchema = z
   .object({
@@ -8,15 +9,13 @@ export const createMatchSchema = z
     scoreOpponent: z.number().int().min(0).max(2),
   })
   .superRefine(({ scoreSelf, scoreOpponent }, ctx) => {
-    const valid =
-      (scoreSelf === 2 && [0, 1].includes(scoreOpponent)) ||
-      (scoreOpponent === 2 && [0, 1].includes(scoreSelf));
-
-    if (!valid) {
+    try {
+      validatePingPongScore(scoreSelf, scoreOpponent);
+    } catch {
       ctx.addIssue({
         code: 'custom',
         path: ['scoreSelf'],
-        message: 'Use um placar válido: 2×0, 2×1, 0×2 ou 1×2.',
+        message: 'Use um placar válido: 2×0, 2×1, 1×0 (ou invertido) ou 1×1 para empate.',
       });
     }
   });

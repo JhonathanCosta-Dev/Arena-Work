@@ -54,6 +54,17 @@ body {
   outline-offset: 3px;
 }
 
+/* Modal entrance: sheet slides up on phones, pops in on larger screens. */
+@keyframes sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.98);
+  }
+}
+.animate-sheet-in[open] {
+  animation: sheet-in 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 /* Lock page scroll while a modal <dialog> (menu drawer) is open. */
 body:has(dialog[open]) {
   overflow: hidden;

@@ -41,7 +41,9 @@ export function RegisterMatchForm({
         form.setError('root', { message: result.message });
         return;
       }
-      router.push('/matches?registered=1');
+      router.push(
+        `/matches?registered=${values.scoreSelf === values.scoreOpponent ? 'draw' : '1'}`,
+      );
     });
   }
 
@@ -50,7 +52,8 @@ export function RegisterMatchForm({
       <p className="text-primary text-xs font-black tracking-[0.28em]">REGISTRAR</p>
       <h1 className="mt-2 text-3xl font-black">Resultado da mesa</h1>
       <p className="text-muted-foreground mt-2 text-sm">
-        Você registra. O adversário confirma. Só então entra no ranking.
+        Vale 2×0, 2×1 ou 1×0. Você registra, o adversário aceita e só então entra no ranking. 1×1
+        vira empate pendente.
       </p>
 
       <form

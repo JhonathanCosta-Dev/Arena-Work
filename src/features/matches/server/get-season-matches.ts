@@ -6,7 +6,13 @@ import type { Database } from '@/types/database.types';
 
 type MatchStatus = Database['public']['Enums']['match_status'];
 
-export type MatchPlayer = { profileId: string; name: string; score: number };
+export type MatchPlayer = {
+  profileId: string;
+  name: string;
+  score: number;
+  avatarPath: string | null;
+  badLoser: boolean;
+};
 
 export type MatchSummary = {
   id: string;
@@ -15,6 +21,57 @@ export type MatchSummary = {
   createdBy: string;
   players: [MatchPlayer, MatchPlayer];
 };
+
+const MATCH_SELECT = `
+  id,
+  status,
+  played_at,
+  created_by,
+  match_sides(side, score, match_participants(profile_id, profile:profiles(name, avatar_path, bad_loser)))
+`;
+
+type MatchRow = {
+  id: string;
+  status: MatchStatus;
+  played_at: string;
+  created_by: string;
+  match_sides: {
+    side: number;
+    score: number;
+    match_participants: {
+      profile_id: string;
+      profile: { name: string; avatar_path: string | null; bad_loser: boolean } | null;
+    }[];
+  }[];
+};
+
+function toSummary(match: MatchRow): MatchSummary[] {
+  const sides = [...match.match_sides].sort((a, b) => a.side - b.side);
+  const players = sides.map((side) => {
+    const participant = side.match_participants[0];
+    return participant
+      ? {
+          profileId: participant.profile_id,
+          name: participant.profile?.name ?? 'Jogador',
+          score: side.score,
+          avatarPath: participant.profile?.avatar_path ?? null,
+          badLoser: participant.profile?.bad_loser ?? false,
+        }
+      : null;
+  });
+  const [a, b] = players;
+  if (!a || !b) return [];
+
+  return [
+    {
+      id: match.id,
+      status: match.status,
+      playedAt: match.played_at,
+      createdBy: match.created_by,
+      players: [a, b],
+    },
+  ];
+}
 
 /**
  * Matches of a season visible to the current user. RLS already limits pending/disputed matches
@@ -27,15 +84,7 @@ export async function getSeasonMatches(
 ): Promise<MatchSummary[]> {
   let query = supabase
     .from('matches')
-    .select(
-      `
-        id,
-        status,
-        played_at,
-        created_by,
-        match_sides(side, score, match_participants(profile_id, profile:profiles(name)))
-      `,
-    )
+    .select(MATCH_SELECT)
     .eq('season_id', seasonId)
     .order('played_at', { ascending: false })
     .limit(options.limit ?? 50);
@@ -44,32 +93,18 @@ export async function getSeasonMatches(
 
   const { data, error } = await query;
   if (error) throw error;
+  return ((data ?? []) as unknown as MatchRow[]).flatMap(toSummary);
+}
 
-  return (data ?? []).flatMap((match) => {
-    const sides = [...match.match_sides].sort((a, b) => a.side - b.side);
-    const players = sides.map((side) => {
-      const participant = side.match_participants[0];
-      return participant
-        ? {
-            profileId: participant.profile_id,
-            name: participant.profile?.name ?? 'Jogador',
-            score: side.score,
-          }
-        : null;
-    });
-    const [a, b] = players;
-    if (!a || !b) return [];
-
-    return [
-      {
-        id: match.id,
-        status: match.status,
-        playedAt: match.played_at,
-        createdBy: match.created_by,
-        players: [a, b] as [MatchPlayer, MatchPlayer],
-      },
-    ];
-  });
+/** Specific matches (e.g. referenced by notifications), in any season. RLS still applies. */
+export async function getMatchesByIds(
+  supabase: SupabaseClient<Database>,
+  ids: string[],
+): Promise<Map<string, MatchSummary>> {
+  if (!ids.length) return new Map();
+  const { data, error } = await supabase.from('matches').select(MATCH_SELECT).in('id', ids);
+  if (error) throw error;
+  return new Map(((data ?? []) as unknown as MatchRow[]).flatMap(toSummary).map((m) => [m.id, m]));
 }
 
 export async function getActiveSeason(supabase: SupabaseClient<Database>) {

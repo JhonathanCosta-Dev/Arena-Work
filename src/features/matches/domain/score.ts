@@ -1,13 +1,13 @@
-export type MatchWinner = 'playerA' | 'playerB';
+export type MatchOutcome = 'playerA' | 'playerB' | 'draw';
 
-export function validatePingPongScore(scoreA: number, scoreB: number): MatchWinner {
-  const valid =
-    (scoreA === 2 && (scoreB === 0 || scoreB === 1)) ||
-    (scoreB === 2 && (scoreA === 0 || scoreA === 1));
+/** Wins: 2×0, 2×1 (best of 3) or 1×0 (single game). A 1×1 is a pending draw. */
+export function validatePingPongScore(scoreA: number, scoreB: number): MatchOutcome {
+  const isWin = (winner: number, loser: number) =>
+    (winner === 2 && (loser === 0 || loser === 1)) || (winner === 1 && loser === 0);
 
-  if (!valid) {
-    throw new Error('Placar inválido. No formato atual, a partida termina em 2x0 ou 2x1.');
-  }
+  if (scoreA === 1 && scoreB === 1) return 'draw';
+  if (isWin(scoreA, scoreB)) return 'playerA';
+  if (isWin(scoreB, scoreA)) return 'playerB';
 
-  return scoreA > scoreB ? 'playerA' : 'playerB';
+  throw new Error('Placar inválido. Use 2×0, 2×1, 1×0 ou 1×1 (empate).');
 }

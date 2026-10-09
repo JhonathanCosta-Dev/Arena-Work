@@ -72,14 +72,15 @@ O app é mobile-first, tem tema escuro e pode ser personalizado com nome, ícone
 
 ### Para os jogadores
 
-| Recurso                   | Detalhes                                                                                                                                          |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Criar conta**           | Cadastro pela tela de login. A conta nasce **inativa** até um admin aprovar.                                                                      |
-| **Registrar partida**     | Escolhe o adversário e o placar (2×0, 2×1, 0×2 ou 1×2). Reenviar o mesmo registro (duplo clique, rede instável) não cria partida duplicada.       |
-| **Confirmar / contestar** | Quem foi desafiado confirma ou contesta (com motivo opcional). Quem registrou não pode confirmar a própria partida.                               |
-| **Home**                  | Progresso da temporada, aviso de partidas pendentes, sua posição, distância para o próximo colocado, pódio, números da temporada e últimos jogos. |
-| **Menu ☰ / leaderboard** | Ranking completo da temporada em qualquer tela, com destaque para você.                                                                           |
-| **Perfil**                | Foto, capa, nome e estatísticas da temporada. Cada um edita só o próprio perfil.                                                                  |
+| Recurso                   | Detalhes                                                                                                                                                                                                                  |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Criar conta**           | Cadastro pela tela de login. A conta nasce **inativa** até um admin aprovar.                                                                                                                                              |
+| **Registrar partida**     | Escolhe o adversário e o placar: **2×0, 2×1 ou 1×0** (e invertidos). **1×1 vira empate pendente**: os dois são avisados, não conta no ranking e vocês jogam o desempate. Reenviar o mesmo registro não duplica a partida. |
+| **Aceitar / recusar**     | O adversário recebe uma **notificação** e responde num **pop-up** com o placar. Só pontua se ele aceitar. **Quem recusa ganha a tag "Mal perdedor"**, visível para todos, que **só o admin remove**.                      |
+| **Notificações**          | Sino com contador de não lidas, lista de atividade e "marcar todas como lidas".                                                                                                                                           |
+| **Home**                  | Progresso da temporada, aviso de partidas pendentes, sua posição, distância para o próximo colocado, pódio, números da temporada e últimos jogos.                                                                         |
+| **Menu ☰ / leaderboard** | Ranking completo da temporada em qualquer tela, com destaque para você.                                                                                                                                                   |
+| **Perfil**                | Foto, capa, nome e estatísticas da temporada. Cada um edita só o próprio perfil.                                                                                                                                          |
 
 ### Para o admin (`/admin`)
 
@@ -87,7 +88,7 @@ O app é mobile-first, tem tema escuro e pode ser personalizado com nome, ícone
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | **Empresa**    | Nome, ícone/avatar e banner, exibidos na home e no menu.                                                                       |
 | **Temporadas** | Criar e editar escolhendo **data de início e de fim** (o último dia conta), ativar e encerrar. Só uma temporada ativa por vez. |
-| **Jogadores**  | Aprovar cadastros pendentes e desativar acessos.                                                                               |
+| **Jogadores**  | Aprovar cadastros pendentes, desativar acessos e **remover a tag "Mal perdedor"**.                                             |
 | **Disputas**   | Manter o resultado contestado ou cancelar a partida.                                                                           |
 | **Auditoria**  | Toda ação administrativa grava um registro em `audit_logs`.                                                                    |
 
@@ -208,13 +209,17 @@ As chaves ficam no painel do Supabase, em **Settings → API Keys**.
 
 Aplique as migrations de [`supabase/migrations`](supabase/migrations) na ordem:
 
-| Migration                                 | O que faz                                                          |
-| ----------------------------------------- | ------------------------------------------------------------------ |
-| `202610080001_initial_schema`             | Tabelas, enums, RLS, RPCs de partida e o esporte Ping Pong         |
-| `202610080002_admin_seasons_and_disputes` | RPCs de admin para temporada e disputas                            |
-| `202610090001_hardening`                  | Revisão de permissões e índices de chaves estrangeiras             |
-| `202610090002_admin_panel_and_signup`     | Painel admin (temporadas com datas, aprovação) e cadastro pendente |
-| `202610090003_company_and_media`          | Empresa (nome/ícone/banner), avatares e buckets do Storage         |
+| Migration                                 | O que faz                                                               |
+| ----------------------------------------- | ----------------------------------------------------------------------- |
+| `202610080001_initial_schema`             | Tabelas, enums, RLS, RPCs de partida e o esporte Ping Pong              |
+| `202610080002_admin_seasons_and_disputes` | RPCs de admin para temporada e disputas                                 |
+| `202610090001_hardening`                  | Revisão de permissões e índices de chaves estrangeiras                  |
+| `202610090002_admin_panel_and_signup`     | Painel admin (temporadas com datas, aprovação) e cadastro pendente      |
+| `202610090003_company_and_media`          | Empresa (nome/ícone/banner), avatares e buckets do Storage              |
+| `202610090004_bad_loser_tag`              | Tag "Mal perdedor" ao recusar, remoção só por admin, notificações lidas |
+| `202610090005_match_status_drawn`         | Novo status `drawn` (empate)                                            |
+| `202610090006_single_game_and_draws`      | Placar 1×0 e empate 1×1 avisando os dois jogadores                      |
+| `202610090007_season_window_errors`       | Mensagens claras para temporada não iniciada ou encerrada               |
 
 Com a Supabase CLI:
 
@@ -286,7 +291,8 @@ Abra <http://localhost:3000>.
 - [x] Perfil da empresa e imagens de perfil
 - [ ] Encerramento de temporada com snapshot final e **Hall da Fama**
 - [ ] Corrigir placar ao resolver disputa (o banco já suporta)
-- [ ] Central de notificações
+- [x] Notificações com pop-up para aceitar/recusar e tag "Mal perdedor"
+- [x] Placar de jogo único (1×0) e empate pendente (1×1)
 - [ ] Confronto direto entre jogadores no perfil
 - [ ] Testes de RLS (pgTAP) e de ponta a ponta
 - [ ] Limite de tentativas no cadastro

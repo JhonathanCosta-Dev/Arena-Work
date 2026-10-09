@@ -1,5 +1,6 @@
 import { finishSeasonAction, startSeasonAction } from '@/features/admin/actions/seasons';
-import { setMemberActiveAction } from '@/features/admin/actions/members';
+import { clearBadLoserAction, setMemberActiveAction } from '@/features/admin/actions/members';
+import { BadLoserTag } from '@/components/ui/bad-loser-tag';
 import { resolveDisputeAction } from '@/features/admin/actions/disputes';
 import { ActionButton } from '@/features/admin/components/action-button';
 import { SeasonForm } from '@/features/admin/components/season-form';
@@ -24,7 +25,10 @@ export default async function AdminPage() {
       .from('seasons')
       .select('id, name, starts_at, ends_at, status')
       .order('starts_at', { ascending: false }),
-    supabase.from('profiles').select('id, name, email, role, is_active, created_at').order('name'),
+    supabase
+      .from('profiles')
+      .select('id, name, email, role, is_active, created_at, bad_loser')
+      .order('name'),
     getCompany(supabase),
   ]);
 
@@ -192,18 +196,33 @@ export default async function AdminPage() {
                     {member.role === 'admin' ? (
                       <span className="text-primary ml-2 text-[11px] font-bold">ADMIN</span>
                     ) : null}
+                    {member.bad_loser ? (
+                      <span className="ml-2 align-middle">
+                        <BadLoserTag />
+                      </span>
+                    ) : null}
                   </div>
                   <div className="text-muted-foreground truncate text-xs">{member.email}</div>
                 </div>
-                {member.id !== userId ? (
-                  <ActionButton
-                    action={setMemberActiveAction}
-                    fields={{ profileId: member.id, active: 'false' }}
-                    label="Desativar"
-                    confirmLabel="Confirmar"
-                    variant="danger"
-                  />
-                ) : null}
+                <div className="flex flex-wrap justify-end gap-2">
+                  {member.bad_loser ? (
+                    <ActionButton
+                      action={clearBadLoserAction}
+                      fields={{ profileId: member.id }}
+                      label="Remover tag"
+                      variant="success"
+                    />
+                  ) : null}
+                  {member.id !== userId ? (
+                    <ActionButton
+                      action={setMemberActiveAction}
+                      fields={{ profileId: member.id, active: 'false' }}
+                      label="Desativar"
+                      confirmLabel="Confirmar"
+                      variant="danger"
+                    />
+                  ) : null}
+                </div>
               </li>
             ))}
           </ul>

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { MatchCard } from '@/features/matches/components/match-card';
-import { PendingMatchActions } from '@/features/matches/components/pending-match-actions';
+import { ConfirmMatchDialog } from '@/features/matches/components/confirm-match-dialog';
 import { getActiveSeason, getSeasonMatches } from '@/features/matches/server/get-season-matches';
 import { requireUser } from '@/lib/auth/require-user';
 
@@ -13,7 +13,7 @@ export default async function MatchesPage({
   const season = await getActiveSeason(supabase);
   const matches = season
     ? await getSeasonMatches(supabase, season.id, {
-        statuses: ['pending_confirmation', 'disputed', 'confirmed'],
+        statuses: ['pending_confirmation', 'disputed', 'drawn', 'confirmed'],
       })
     : [];
 
@@ -26,7 +26,7 @@ export default async function MatchesPage({
   const awaiting = matches.filter(
     (match) =>
       (match.status === 'pending_confirmation' && match.createdBy === userId) ||
-      (match.status === 'disputed' && isMine(match)),
+      ((match.status === 'disputed' || match.status === 'drawn') && isMine(match)),
   );
   const confirmed = matches.filter((match) => match.status === 'confirmed');
 
@@ -42,7 +42,9 @@ export default async function MatchesPage({
           role="status"
           className="border-success/40 bg-success/10 text-success rounded-2xl border p-4 text-sm"
         >
-          Partida registrada! Ela entra no ranking assim que o seu adversário confirmar.
+          {registered === 'draw'
+            ? 'Empate registrado! Vocês dois foram avisados: joguem o desempate e registrem o resultado.'
+            : 'Partida registrada! Ela entra no ranking assim que o seu adversário confirmar.'}
         </p>
       ) : null}
 
@@ -59,7 +61,13 @@ export default async function MatchesPage({
           {toConfirm.length ? (
             toConfirm.map((match) => (
               <MatchCard key={match.id} match={match} currentUserId={userId}>
-                <PendingMatchActions matchId={match.id} />
+                <ConfirmMatchDialog
+                  match={match}
+                  currentUserId={userId}
+                  triggerClassName="bg-primary mt-4 w-full rounded-xl px-4 py-3 text-sm font-black text-white transition active:scale-[.98]"
+                >
+                  Responder: aceitar ou recusar
+                </ConfirmMatchDialog>
               </MatchCard>
             ))
           ) : (
@@ -71,7 +79,7 @@ export default async function MatchesPage({
       {awaiting.length ? (
         <section aria-labelledby="awaiting">
           <h2 id="awaiting" className="text-lg font-black">
-            Enviadas por você / em disputa
+            Enviadas por você, em disputa e empates
           </h2>
           <div className="mt-3 space-y-3">
             {awaiting.map((match) => (
