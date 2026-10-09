@@ -4,7 +4,8 @@
 
 <p align="center">
   <strong>Competições internas da sua empresa, com ranking ao vivo, temporadas e confirmação de resultado.</strong><br />
-  Primeira modalidade: <strong>Ping Pong</strong>.
+  Primeira modalidade: <strong>Ping Pong</strong>.<br /><br />
+  🌐 <a href="https://arena-work.vercel.app"><strong>arena-work.vercel.app</strong></a>
 </p>
 
 <p align="center">
@@ -270,6 +271,7 @@ Abra <http://localhost:3000>.
 
 ## Deploy
 
+- **Produção:** <https://arena-work.vercel.app>, com deploy automático a cada push na `main`.
 - **Front:** Vercel, configurando as mesmas variáveis de ambiente. `SUPABASE_SERVICE_ROLE_KEY` não pode ter prefixo `NEXT_PUBLIC_`.
 - **Banco, Auth e Storage:** Supabase, com as migrations aplicadas.
 - Ajuste `NEXT_PUBLIC_APP_URL` para o domínio final.
