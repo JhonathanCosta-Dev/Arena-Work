@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -19,6 +19,9 @@ import {
 import { Avatar } from '@/components/ui/avatar';
 import { BadLoserTag } from '@/components/ui/bad-loser-tag';
 import { logoutAction } from '@/features/auth/actions/logout';
+import { PlayerAvatar } from '@/features/competitive/components/player-badges';
+import { TierBadge } from '@/features/competitive/components/tier-emblem';
+import type { TierKey } from '@/features/competitive/domain/tiers';
 
 export type LeaderboardEntry = {
   playerId: string;
@@ -31,11 +34,24 @@ export type LeaderboardEntry = {
   badLoser: boolean;
 };
 
+export type CompetitiveEntry = {
+  playerId: string;
+  position: number;
+  name: string;
+  points: number;
+  streak: number;
+  tier: TierKey;
+  division: 1 | 2 | 3;
+  tierLabel: string;
+  avatarUrl: string | null;
+};
+
 type MenuDrawerProps = {
   userId: string;
   isAdmin: boolean;
   seasonName: string | null;
   leaderboard: LeaderboardEntry[];
+  competitive: CompetitiveEntry[];
   pendingCount: number;
   company: { name: string | null; iconUrl: string | null };
 };
@@ -45,11 +61,13 @@ export function MenuDrawer({
   isAdmin,
   seasonName,
   leaderboard,
+  competitive,
   pendingCount,
   company,
 }: MenuDrawerProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const pathname = usePathname();
+  const [board, setBoard] = useState<'month' | 'competitive'>('month');
 
   useEffect(() => {
     dialogRef.current?.close();
@@ -116,15 +134,95 @@ export function MenuDrawer({
             aria-labelledby="leaderboard-title"
             className="border-border bg-background rounded-2xl border p-4"
           >
-            <p className="text-muted-foreground text-[10px] font-black tracking-[0.28em]">
-              LEADERBOARD
-            </p>
-            <h2 id="leaderboard-title" className="mt-1 text-lg font-black">
-              {seasonName ?? 'Sem temporada ativa'}
-            </h2>
-            {leaderboard.length ? (
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-muted-foreground text-[10px] font-black tracking-[0.28em]">
+                  LEADERBOARD
+                </p>
+                <h2 id="leaderboard-title" className="mt-1 truncate text-lg font-black">
+                  {board === 'month' ? (seasonName ?? 'Sem temporada ativa') : 'Competitivo'}
+                </h2>
+              </div>
+              <div
+                role="tablist"
+                aria-label="Tipo de ranking"
+                className="bg-card grid shrink-0 grid-cols-2 gap-1 rounded-lg p-1 text-[11px] font-bold"
+              >
+                {(
+                  [
+                    ['month', 'Mês'],
+                    ['competitive', 'Elo'],
+                  ] as const
+                ).map(([key, text]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    role="tab"
+                    aria-selected={board === key}
+                    onClick={() => setBoard(key)}
+                    className={`rounded-md px-2 py-1 ${board === key ? 'bg-card-elevated text-white' : 'text-muted-foreground'}`}
+                  >
+                    {text}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {board === 'month' ? (
+              leaderboard.length ? (
+                <ol className="mt-4 space-y-1">
+                  {leaderboard.map((row) => {
+                    const isYou = row.playerId === userId;
+                    return (
+                      <li key={row.playerId}>
+                        <Link
+                          href={`/players/${row.playerId}`}
+                          className={`hover:bg-card-elevated grid grid-cols-[1.75rem_auto_1fr_auto] items-center gap-2 rounded-xl px-2 py-2 ${isYou ? 'bg-primary/10 ring-primary/40 ring-1' : ''}`}
+                        >
+                          <span
+                            className={`font-mono text-sm font-black ${row.position <= 3 ? 'text-primary' : 'text-muted-foreground'}`}
+                          >
+                            {row.position}º
+                          </span>
+                          <PlayerAvatar
+                            playerId={row.playerId}
+                            name={row.name}
+                            src={row.avatarUrl}
+                            size="sm"
+                          />
+                          <span className="min-w-0">
+                            <span className="block truncate text-sm font-bold">
+                              {row.name}
+                              {isYou ? (
+                                <span className="text-muted-foreground"> (você)</span>
+                              ) : null}
+                              {row.badLoser ? (
+                                <span className="ml-1 align-middle">
+                                  <BadLoserTag compact />
+                                </span>
+                              ) : null}
+                            </span>
+                            <span className="text-muted-foreground block text-[11px]">
+                              {row.wins}V · {row.losses}D
+                            </span>
+                          </span>
+                          <span className="font-mono text-base font-black">
+                            {row.points}
+                            <span className="text-muted-foreground ml-1 text-[10px]">PTS</span>
+                          </span>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ol>
+              ) : (
+                <p className="text-muted-foreground mt-3 text-sm">
+                  Nenhum jogador no ranking ainda.
+                </p>
+              )
+            ) : (
               <ol className="mt-4 space-y-1">
-                {leaderboard.map((row) => {
+                {competitive.map((row) => {
                   const isYou = row.playerId === userId;
                   return (
                     <li key={row.playerId}>
@@ -132,24 +230,31 @@ export function MenuDrawer({
                         href={`/players/${row.playerId}`}
                         className={`hover:bg-card-elevated grid grid-cols-[1.75rem_auto_1fr_auto] items-center gap-2 rounded-xl px-2 py-2 ${isYou ? 'bg-primary/10 ring-primary/40 ring-1' : ''}`}
                       >
-                        <span
-                          className={`font-mono text-sm font-black ${row.position <= 3 ? 'text-primary' : 'text-muted-foreground'}`}
-                        >
+                        <span className="text-muted-foreground font-mono text-sm font-black">
                           {row.position}º
                         </span>
-                        <Avatar name={row.name} src={row.avatarUrl} size="sm" />
+                        <PlayerAvatar
+                          playerId={row.playerId}
+                          name={row.name}
+                          src={row.avatarUrl}
+                          size="sm"
+                        />
                         <span className="min-w-0">
                           <span className="block truncate text-sm font-bold">
                             {row.name}
                             {isYou ? <span className="text-muted-foreground"> (você)</span> : null}
-                            {row.badLoser ? (
-                              <span className="ml-1 align-middle">
-                                <BadLoserTag compact />
+                          </span>
+                          <span className="mt-0.5 flex items-center gap-1">
+                            <TierBadge
+                              tier={row.tier}
+                              division={row.division}
+                              label={row.tierLabel}
+                            />
+                            {row.streak >= 2 ? (
+                              <span className="text-warning text-[11px] font-black">
+                                🔥{row.streak}
                               </span>
                             ) : null}
-                          </span>
-                          <span className="text-muted-foreground block text-[11px]">
-                            {row.wins}V · {row.losses}D
                           </span>
                         </span>
                         <span className="font-mono text-base font-black">
@@ -161,8 +266,6 @@ export function MenuDrawer({
                   );
                 })}
               </ol>
-            ) : (
-              <p className="text-muted-foreground mt-3 text-sm">Nenhum jogador no ranking ainda.</p>
             )}
           </section>
 

@@ -65,6 +65,41 @@ body {
   animation: sheet-in 220ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* Monthly champion: rotating golden border with a soft pulsing glow. */
+@property --champion-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+@keyframes champion-spin {
+  to {
+    --champion-angle: 360deg;
+  }
+}
+@keyframes champion-glow {
+  50% {
+    box-shadow:
+      0 0 18px rgba(255, 200, 60, 0.75),
+      0 0 36px rgba(255, 59, 59, 0.35);
+  }
+}
+.champion-ring {
+  background: conic-gradient(
+    from var(--champion-angle),
+    #ffd84d,
+    #fff3b0,
+    #ff9d00,
+    #ff3b3b,
+    #ffd84d
+  );
+  box-shadow:
+    0 0 10px rgba(255, 200, 60, 0.5),
+    0 0 22px rgba(255, 59, 59, 0.2);
+  animation:
+    champion-spin 3s linear infinite,
+    champion-glow 2.4s ease-in-out infinite;
+}
+
 /* Lock page scroll while a modal <dialog> (menu drawer) is open. */
 body:has(dialog[open]) {
   overflow: hidden;

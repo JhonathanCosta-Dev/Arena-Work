@@ -24,6 +24,7 @@
 - [Telas](#telas)
 - [Funcionalidades](#funcionalidades)
 - [Como uma partida vira ranking](#como-uma-partida-vira-ranking)
+- [Sistema competitivo (elo)](#sistema-competitivo-elo)
 - [Regras do ranking](#regras-do-ranking)
 - [Stack](#stack)
 - [Arquitetura](#arquitetura)
@@ -117,6 +118,27 @@ sequenceDiagram
         App->>DB: admin_resolve_dispute() + audit_log
     end
 ```
+
+## Sistema competitivo (elo)
+
+Além do **ranking do mês** (por vitórias, zera a cada temporada e define o campeão), existe o **ranking competitivo**, que **nunca zera**.
+
+| Evento                | Pontos                                                                  |
+| --------------------- | ----------------------------------------------------------------------- |
+| Vitória               | **+25**                                                                 |
+| Sequência de vitórias | **+5 por vitória seguida**, até **+25 extra** (a 6ª seguida já vale 50) |
+| Derrota               | **−10** (nunca abaixo de 0)                                             |
+
+**30 divisões**, de Madeira 1 a Imortal 3 (1 é a mais baixa e 3 a mais alta em cada elo):
+Madeira → Bronze → Ferro → Prata → Ouro → Platina → Diamante → Ancestral → Divino → Imortal.
+Cada divisão custa mais que a anterior (de 50 pts na Madeira a 500 pts no Imortal), calibrado para ~30 partidas/mês.
+
+- **Medalha do mês:** quando a temporada fecha, o elo de cada jogador vira a medalha daquele mês no perfil.
+- **Borda do avatar:** acompanha a cor do elo atual em todo o app.
+- **Campeão do mês:** o 1º do ranking do mês fica em destaque na home, com **borda dourada animada**, até o próximo campeão.
+- **Conquistas exclusivas:** Primeiro Sangue, Embalado (5 seguidas), **Imparável (8 seguidas)**, Lenda Viva (12 seguidas), Veterano (25 vitórias), Centurião (100), Pneu (10 vitórias sem ceder set), Mata-Gigante (vencer elo superior) e Campeão do Mês.
+
+As regras ficam em [`src/features/competitive/domain`](src/features/competitive/domain) e têm testes. Tudo é derivado das partidas confirmadas, sem pontuação editável à mão.
 
 ## Regras do ranking
 
@@ -289,6 +311,7 @@ Abra <http://localhost:3000>.
 - [x] Menu com leaderboard da temporada
 - [x] Painel admin: temporadas com datas, aprovação de jogadores e disputas
 - [x] Perfil da empresa e imagens de perfil
+- [x] Sistema competitivo: elos, medalhas do mês, conquistas e campeão em destaque
 - [ ] Encerramento de temporada com snapshot final e **Hall da Fama**
 - [ ] Corrigir placar ao resolver disputa (o banco já suporta)
 - [x] Notificações com pop-up para aceitar/recusar e tag "Mal perdedor"

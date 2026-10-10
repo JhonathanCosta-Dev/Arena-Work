@@ -11,15 +11,18 @@ import {
   getSeasonMatches,
 } from '@/features/matches/server/get-season-matches';
 import { getCurrentRanking } from '@/features/ranking/server/get-current-ranking';
+import { ChampionSpotlight } from '@/features/competitive/components/champion-spotlight';
+import { getCompetitive } from '@/features/competitive/server/get-competitive';
 import { requireUser } from '@/lib/auth/require-user';
 import { formatDate } from '@/lib/dates';
 
 export default async function DashboardPage() {
   const { userId, profile, supabase } = await requireUser();
-  const [{ season, ranking }, pendingCount, company] = await Promise.all([
+  const [{ season, ranking }, pendingCount, company, competitive] = await Promise.all([
     getCurrentRanking(supabase),
     countPendingConfirmations(supabase, userId),
     getCompany(supabase),
+    getCompetitive(supabase),
   ]);
   const recent = season
     ? await getSeasonMatches(supabase, season.id, { statuses: ['confirmed'], limit: 5 })
@@ -27,6 +30,7 @@ export default async function DashboardPage() {
 
   const confirmedTotal = ranking.reduce((sum, row) => sum + row.matches, 0) / 2;
   const streak = bestStreakHolder(ranking);
+  const me = competitive.player(userId);
   const playing = ranking.filter((row) => row.matches > 0).length;
   const registerWindow = season
     ? seasonProgress(season.starts_at, season.ends_at)
@@ -40,6 +44,10 @@ export default async function DashboardPage() {
         isAdmin={profile.role === 'admin'}
         season={season}
       />
+
+      {competitive.champion ? (
+        <ChampionSpotlight champion={competitive.champion} userId={userId} />
+      ) : null}
 
       {pendingCount ? (
         <Link
@@ -81,7 +89,12 @@ export default async function DashboardPage() {
 
       {season ? (
         <div className="grid gap-4 md:grid-cols-2 md:gap-6">
-          <MyStanding ranking={ranking} userId={userId} />
+          <MyStanding
+            ranking={ranking}
+            userId={userId}
+            tier={me.tier}
+            competitivePoints={me.row?.points ?? 0}
+          />
           <Podium ranking={ranking} userId={userId} />
         </div>
       ) : null}

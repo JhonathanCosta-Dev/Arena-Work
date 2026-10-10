@@ -1,6 +1,6 @@
 import Link from 'next/link';
-import { Avatar } from '@/components/ui/avatar';
 import { BadLoserTag } from '@/components/ui/bad-loser-tag';
+import { PlayerAvatar } from '@/features/competitive/components/player-badges';
 import type { RankedRow } from '@/features/ranking/domain/ranking';
 import { MEDIA_BUCKETS, mediaUrl } from '@/lib/storage/media';
 
@@ -38,11 +38,12 @@ export function Podium({ ranking, userId }: { ranking: Row[]; userId: string }) 
               <li key={index} className="min-w-0 text-center">
                 {row ? (
                   <Link href={`/players/${row.playerId}`} className="group block">
-                    <Avatar
+                    <PlayerAvatar
+                      playerId={row.playerId}
                       name={row.profile?.name ?? 'Jogador'}
                       src={mediaUrl(MEDIA_BUCKETS.profile, row.profile?.avatar_path)}
-                      size="md"
-                      className={`mb-2 ${index === 0 ? 'ring-primary ring-2' : ''}`}
+                      size={index === 0 ? 'xl' : 'md'}
+                      className="mb-2"
                     />
                     <div className="truncate text-sm font-bold group-hover:underline">
                       {row.playerId === userId ? 'Você' : (row.profile?.name ?? 'Jogador')}

@@ -2,12 +2,16 @@ import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { Pencil } from 'lucide-react';
 import { z } from 'zod';
-import { Avatar } from '@/components/ui/avatar';
+import { PlayerAvatar } from '@/features/competitive/components/player-badges';
 import { BadLoserTag } from '@/components/ui/bad-loser-tag';
 import { MatchCard } from '@/features/matches/components/match-card';
 import { getSeasonMatches } from '@/features/matches/server/get-season-matches';
 import { ProfileEditForm } from '@/features/profile/components/profile-edit-form';
 import { getCurrentRanking } from '@/features/ranking/server/get-current-ranking';
+import { CompetitiveCard } from '@/features/competitive/components/competitive-card';
+import { TierBadge } from '@/features/competitive/components/tier-emblem';
+import { topAchievement } from '@/features/competitive/domain/achievements';
+import { getCompetitive } from '@/features/competitive/server/get-competitive';
 import { requireUser } from '@/lib/auth/require-user';
 import { MEDIA_BUCKETS, mediaUrl } from '@/lib/storage/media';
 
@@ -16,17 +20,20 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
   if (!z.uuid().safeParse(id).success) notFound();
 
   const { userId, supabase } = await requireUser();
-  const [{ data: player }, { season, ranking }] = await Promise.all([
+  const [{ data: player }, { season, ranking }, competitive] = await Promise.all([
     supabase
       .from('profiles')
       .select('id, name, role, avatar_path, banner_path, bad_loser')
       .eq('id', id)
       .maybeSingle(),
     getCurrentRanking(supabase),
+    getCompetitive(supabase),
   ]);
   if (!player) notFound();
 
   const isOwn = player.id === userId;
+  const competitiveData = competitive.player(player.id);
+  const highlight = topAchievement(competitiveData.earned);
   const row = ranking.find((entry) => entry.playerId === player.id);
   const matches = season
     ? (await getSeasonMatches(supabase, season.id, { statuses: ['confirmed'] }))
@@ -61,17 +68,28 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
           ) : null}
         </div>
         <div className="px-5 pb-5 sm:px-7">
-          <Avatar
+          <PlayerAvatar
+            playerId={player.id}
             name={player.name}
             src={avatarUrl}
             size="lg"
-            className="ring-card -mt-12 ring-4"
+            className="-mt-12"
           />
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <h1 className="text-2xl font-black sm:text-3xl">{player.name}</h1>
             {player.role === 'admin' ? (
               <span className="bg-primary/15 text-primary rounded-full px-2 py-0.5 text-[11px] font-black">
                 ADMIN
+              </span>
+            ) : null}
+            <TierBadge
+              tier={competitiveData.tier.key}
+              division={competitiveData.tier.division}
+              label={competitiveData.tier.label}
+            />
+            {highlight ? (
+              <span className="rounded-full border border-amber-400/40 bg-amber-400/10 px-2 py-0.5 text-[11px] font-black text-amber-300">
+                ★ {highlight.name}
               </span>
             ) : null}
             {player.bad_loser ? <BadLoserTag /> : null}
@@ -99,6 +117,8 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
           ) : null}
         </div>
       </section>
+
+      <CompetitiveCard data={competitiveData} />
 
       {isOwn ? (
         <details className="border-border bg-card group rounded-3xl border p-5">

@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { Bell } from 'lucide-react';
 import { ArenaWorkWordmark } from '@/components/brand/arena-work-logo';
 import { BottomNav } from './bottom-nav';
-import { MenuDrawer, type LeaderboardEntry } from './menu-drawer';
+import { MenuDrawer, type CompetitiveEntry, type LeaderboardEntry } from './menu-drawer';
 
 type AppShellProps = {
   children: React.ReactNode;
@@ -10,6 +10,7 @@ type AppShellProps = {
   isAdmin: boolean;
   seasonName: string | null;
   leaderboard: LeaderboardEntry[];
+  competitive: CompetitiveEntry[];
   pendingCount: number;
   unreadCount: number;
   company: { name: string | null; iconUrl: string | null };

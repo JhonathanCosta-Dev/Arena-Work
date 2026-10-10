@@ -2,7 +2,7 @@
 
 import { useRef, useState, useTransition } from 'react';
 import { CircleCheckBig, Crown, Frown, ShieldAlert, X } from 'lucide-react';
-import { Avatar } from '@/components/ui/avatar';
+import { PlayerAvatar } from '@/features/competitive/components/player-badges';
 import { BadLoserTag } from '@/components/ui/bad-loser-tag';
 import { markNotificationRead } from '@/features/notifications/actions/mark-read';
 import { formatDateTime } from '@/lib/dates';
@@ -40,11 +40,11 @@ function PlayerColumn({
             aria-hidden="true"
           />
         ) : null}
-        <Avatar
+        <PlayerAvatar
+          playerId={player.profileId}
           name={player.name}
           src={mediaUrl(MEDIA_BUCKETS.profile, player.avatarPath)}
           size="xl"
-          className={won ? 'ring-warning ring-2' : ''}
         />
       </div>
       <div className="w-full truncate text-sm font-bold">{isYou ? 'Você' : player.name}</div>

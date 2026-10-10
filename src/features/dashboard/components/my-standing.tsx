@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import { Crown, Flame, Target } from 'lucide-react';
+import { TierEmblem } from '@/features/competitive/components/tier-emblem';
+import type { TierInfo } from '@/features/competitive/domain/tiers';
 import type { RankedRow } from '@/features/ranking/domain/ranking';
 import { chaseTarget } from '../domain/insights';
 
@@ -9,7 +11,17 @@ function plural(count: number, one: string, many: string) {
   return `${count} ${count === 1 ? one : many}`;
 }
 
-export function MyStanding({ ranking, userId }: { ranking: Row[]; userId: string }) {
+export function MyStanding({
+  ranking,
+  userId,
+  tier,
+  competitivePoints,
+}: {
+  ranking: Row[];
+  userId: string;
+  tier: TierInfo;
+  competitivePoints: number;
+}) {
   const me = ranking.find((row) => row.playerId === userId);
   if (!me) return null;
 
@@ -91,6 +103,32 @@ export function MyStanding({ ranking, userId }: { ranking: Row[]; userId: string
           </p>
         ) : null}
       </div>
+
+      <Link
+        href={`/players/${userId}`}
+        className="bg-background hover:bg-card-elevated mt-4 flex items-center gap-3 rounded-2xl p-3 transition"
+      >
+        <TierEmblem tier={tier.key} division={tier.division} size="md" />
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-black" style={{ color: tier.color }}>
+            {tier.label}{' '}
+            <span className="text-muted-foreground font-mono text-xs font-bold">
+              {competitivePoints} pts
+            </span>
+          </span>
+          <span className="bg-card mt-1 block h-1.5 overflow-hidden rounded-full">
+            <span
+              className="block h-full rounded-full"
+              style={{ width: `${Math.max(3, tier.progress * 100)}%`, background: tier.color }}
+            />
+          </span>
+          <span className="text-muted-foreground mt-1 block text-[11px]">
+            {tier.nextLabel && tier.nextAt !== null
+              ? `${tier.nextAt - competitivePoints} pts para ${tier.nextLabel}`
+              : 'Topo do competitivo'}
+          </span>
+        </span>
+      </Link>
     </section>
   );
 }
