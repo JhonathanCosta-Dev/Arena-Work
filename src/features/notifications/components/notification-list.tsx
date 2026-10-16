@@ -1,6 +1,6 @@
 'use client';
 
-import { useTransition } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import {
   BellRing,
@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { ConfirmMatchDialog } from '@/features/matches/components/confirm-match-dialog';
 import { formatDateTime } from '@/lib/dates';
-import { markAllNotificationsRead, markNotificationRead } from '../actions/mark-read';
+import { markAllNotificationsRead } from '../actions/mark-read';
 import type { AppNotification } from '../server/get-notifications';
 
 const icons: Record<string, { icon: LucideIcon; tone: string }> = {
@@ -24,9 +24,8 @@ const icons: Record<string, { icon: LucideIcon; tone: string }> = {
   match_draw_pending: { icon: Scale, tone: 'text-warning bg-warning/10' },
 };
 
-function Row({ notification }: { notification: AppNotification }) {
+function Row({ notification, isNew }: { notification: AppNotification; isNew: boolean }) {
   const { icon: Icon, tone } = icons[notification.type] ?? icons.match_confirmation_requested!;
-  const unread = !notification.readAt;
   const awaitingAnswer =
     notification.type === 'match_confirmation_requested' &&
     notification.match?.status === 'pending_confirmation';
@@ -38,11 +37,13 @@ function Row({ notification }: { notification: AppNotification }) {
       </span>
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-2">
-          <span className={`truncate text-sm ${unread ? 'font-black' : 'font-bold'}`}>
+          <span className={`truncate text-sm ${isNew ? 'font-black' : 'font-bold'}`}>
             {notification.title}
           </span>
-          {unread ? (
-            <span className="bg-primary size-2 shrink-0 rounded-full" aria-label="não lida" />
+          {isNew ? (
+            <span className="bg-primary/15 text-primary shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-black">
+              Nova
+            </span>
           ) : null}
         </span>
         <span className="text-muted-foreground block text-xs leading-5">{notification.body}</span>
@@ -72,53 +73,52 @@ export function NotificationList({
   notifications: AppNotification[];
   userId: string;
 }) {
-  const [pending, startTransition] = useTransition();
-  const hasUnread = notifications.some((n) => !n.readAt);
+  // Opening the page marks everything as read. The ones that were unread on arrival keep the
+  // "Nova" highlight for this visit, even after the refresh brings them back as read.
+  const [newIds] = useState(
+    () => new Set(notifications.filter((n) => !n.readAt).map((n) => n.id)),
+  );
+  const markedRef = useRef(false);
+
+  useEffect(() => {
+    if (markedRef.current || !newIds.size) return;
+    markedRef.current = true;
+    void markAllNotificationsRead();
+  }, [newIds]);
 
   if (!notifications.length) {
     return <p className="text-muted-foreground text-sm">Nada por aqui ainda.</p>;
   }
 
   return (
-    <div className="space-y-4">
-      {hasUnread ? (
-        <div className="flex justify-end">
-          <button
-            type="button"
-            disabled={pending}
-            onClick={() => startTransition(() => markAllNotificationsRead())}
-            className="text-muted-foreground text-xs font-bold hover:text-white disabled:opacity-50"
-          >
-            Marcar todas como lidas
-          </button>
-        </div>
-      ) : null}
-      <ul className="space-y-2">
-        {notifications.map((notification) => (
+    <ul className="space-y-2">
+      {notifications.map((notification) => {
+        const isNew = newIds.has(notification.id);
+        return (
           <li key={notification.id}>
-            {notification.match ? (
+            {notification.type === 'match_draw_pending' && notification.opponentId ? (
+              <Link
+                href={`/players/${userId}?vs=${notification.opponentId}`}
+                className={rowClass}
+              >
+                <Row notification={notification} isNew={isNew} />
+              </Link>
+            ) : notification.match ? (
               <ConfirmMatchDialog
                 match={notification.match}
                 currentUserId={userId}
-                notificationId={notification.readAt ? undefined : notification.id}
                 triggerClassName={rowClass}
               >
-                <Row notification={notification} />
+                <Row notification={notification} isNew={isNew} />
               </ConfirmMatchDialog>
             ) : (
-              <Link
-                href={`/players/${userId}`}
-                onClick={() => {
-                  if (!notification.readAt) void markNotificationRead(notification.id);
-                }}
-                className={rowClass}
-              >
-                <Row notification={notification} />
+              <Link href={`/players/${userId}`} className={rowClass}>
+                <Row notification={notification} isNew={isNew} />
               </Link>
             )}
           </li>
-        ))}
-      </ul>
-    </div>
+        );
+      })}
+    </ul>
   );
 }

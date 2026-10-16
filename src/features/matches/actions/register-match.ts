@@ -30,6 +30,7 @@ export async function registerMatch(input: unknown): Promise<RegisterMatchResult
     p_opponent_id: parsed.data.opponentId,
     p_score_self: parsed.data.scoreSelf,
     p_score_opponent: parsed.data.scoreOpponent,
+    p_points_to_win: parsed.data.pointsToWin,
   });
 
   if (error || !data) {

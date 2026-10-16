@@ -11,6 +11,7 @@ import {
   Zap,
   type LucideIcon,
 } from 'lucide-react';
+import Link from 'next/link';
 import { ACHIEVEMENTS, type AchievementKey } from '../domain/achievements';
 import type { PlayerCompetitive } from '../server/get-competitive';
 import { TierEmblem } from './tier-emblem';
@@ -22,7 +23,7 @@ const achievementIcons: Record<AchievementKey, LucideIcon> = {
   streak_12: Crown,
   wins_25: Medal,
   wins_100: Shield,
-  flawless_10: Award,
+  flawless_3: Award,
   giant_slayer: Swords,
   champion: Trophy,
 };
@@ -45,12 +46,20 @@ export function CompetitiveCard({ data }: { data: PlayerCompetitive }) {
       aria-labelledby="competitive-title"
       className="border-border bg-card rounded-3xl border p-5"
     >
-      <h2
-        id="competitive-title"
-        className="text-muted-foreground text-xs font-black tracking-[0.28em]"
-      >
-        COMPETITIVO
-      </h2>
+      <div className="flex items-center justify-between gap-3">
+        <h2
+          id="competitive-title"
+          className="text-muted-foreground text-xs font-black tracking-[0.28em]"
+        >
+          COMPETITIVO
+        </h2>
+        <Link
+          href="/ranking/elos"
+          className="text-muted-foreground text-xs font-bold hover:text-white"
+        >
+          Ver escada de elos
+        </Link>
+      </div>
 
       <div className="mt-4 flex items-center gap-4">
         <TierEmblem tier={tier.key} division={tier.division} size="lg" label={tier.label} />

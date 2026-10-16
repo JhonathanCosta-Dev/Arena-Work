@@ -37,3 +37,46 @@ export function getHeadToHead(
     recentMatches: relevant.slice(0, recentLimit),
   };
 }
+
+export type OpponentRecord = {
+  opponentId: string;
+  /** Wins of the player whose history is being read. */
+  wins: number;
+  losses: number;
+  total: number;
+  lastPlayedAt: string;
+};
+
+/**
+ * Head-to-head record of `playerId` against everyone they faced, most played first
+ * (ties: most recent first). Matches without `playerId` are ignored.
+ */
+export function opponentRecords(
+  playerId: string,
+  matches: readonly ConfirmedMatch[],
+): OpponentRecord[] {
+  const records = new Map<string, OpponentRecord>();
+
+  for (const match of matches) {
+    const me = match.sides.find((side) => side.playerId === playerId);
+    const rival = match.sides.find((side) => side.playerId !== playerId);
+    if (!me || !rival || me.score === rival.score) continue;
+
+    const record = records.get(rival.playerId) ?? {
+      opponentId: rival.playerId,
+      wins: 0,
+      losses: 0,
+      total: 0,
+      lastPlayedAt: match.playedAt,
+    };
+    if (me.score > rival.score) record.wins += 1;
+    else record.losses += 1;
+    record.total += 1;
+    if (match.playedAt > record.lastPlayedAt) record.lastPlayedAt = match.playedAt;
+    records.set(rival.playerId, record);
+  }
+
+  return [...records.values()].sort(
+    (a, b) => b.total - a.total || b.lastPlayedAt.localeCompare(a.lastPlayedAt),
+  );
+}

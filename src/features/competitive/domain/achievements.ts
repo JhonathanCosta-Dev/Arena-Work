@@ -7,7 +7,7 @@ export type AchievementKey =
   | 'streak_12'
   | 'wins_25'
   | 'wins_100'
-  | 'flawless_10'
+  | 'flawless_3'
   | 'giant_slayer'
   | 'champion';
 
@@ -42,9 +42,9 @@ export const ACHIEVEMENTS: readonly Achievement[] = [
     rarity: 'legendary',
   },
   {
-    key: 'flawless_10',
+    key: 'flawless_3',
     name: 'Pneu',
-    description: '10 vitórias sem ceder um set.',
+    description: '3 vitórias sem o adversário pontuar.',
     rarity: 'epic',
   },
   {
@@ -74,7 +74,7 @@ export function earnedAchievements(
   if (stats.bestStreak >= 12) earned.add('streak_12');
   if (stats.wins >= 25) earned.add('wins_25');
   if (stats.wins >= 100) earned.add('wins_100');
-  if (stats.flawlessWins >= 10) earned.add('flawless_10');
+  if (stats.flawlessWins >= 3) earned.add('flawless_3');
   if (stats.giantSlayerWins >= 1) earned.add('giant_slayer');
   return earned;
 }

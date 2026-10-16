@@ -19,7 +19,7 @@ export type CompetitiveStats = {
   losses: number;
   currentStreak: number;
   bestStreak: number;
-  /** Wins where the opponent did not take a single set (2×0 or 1×0). */
+  /** Wins where the opponent scored nothing: 11×0 / 21×0 games, or legacy 2×0 / 1×0 set results. */
   flawlessWins: number;
   /** Wins against someone in a higher tier at the time of the match. */
   giantSlayerWins: number;
@@ -117,4 +117,27 @@ export function competitiveRanking(stats: Iterable<CompetitiveStats>): Competiti
         a.playerId.localeCompare(b.playerId),
     )
     .map((row, index) => ({ ...row, tier: tierFromPoints(row.points), position: index + 1 }));
+}
+
+export type WinsNeeded = {
+  /** Wins in a row from the current streak (streak bonus included): the fastest way up. */
+  inARow: number;
+  /** Wins at the base value only (+25 each), ignoring any streak bonus. */
+  withoutStreak: number;
+};
+
+/** How many wins separate `fromPoints` from `toPoints`. Losses are not projected. */
+export function winsNeeded(fromPoints: number, toPoints: number, currentStreak = 0): WinsNeeded {
+  if (toPoints <= fromPoints) return { inARow: 0, withoutStreak: 0 };
+
+  let points = fromPoints;
+  let streak = currentStreak;
+  let inARow = 0;
+  while (points < toPoints) {
+    streak += 1;
+    inARow += 1;
+    points += winValue(streak);
+  }
+
+  return { inARow, withoutStreak: Math.ceil((toPoints - fromPoints) / WIN_POINTS) };
 }

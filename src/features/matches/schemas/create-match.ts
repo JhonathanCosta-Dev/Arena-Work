@@ -1,22 +1,19 @@
 import { z } from 'zod';
-import { validatePingPongScore } from '../domain/score';
+import { INVALID_SCORE_MESSAGE, validateGameScore } from '../domain/score';
 
 export const createMatchSchema = z
   .object({
     requestId: z.uuid(),
     opponentId: z.uuid('Selecione um adversário válido.'),
-    scoreSelf: z.number().int().min(0).max(2),
-    scoreOpponent: z.number().int().min(0).max(2),
+    pointsToWin: z.union([z.literal(11), z.literal(21)]),
+    scoreSelf: z.number('Informe os pontos.').int().min(0).max(99),
+    scoreOpponent: z.number('Informe os pontos.').int().min(0).max(99),
   })
-  .superRefine(({ scoreSelf, scoreOpponent }, ctx) => {
+  .superRefine(({ pointsToWin, scoreSelf, scoreOpponent }, ctx) => {
     try {
-      validatePingPongScore(scoreSelf, scoreOpponent);
+      validateGameScore(pointsToWin, scoreSelf, scoreOpponent);
     } catch {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['scoreSelf'],
-        message: 'Use um placar válido: 2×0, 2×1, 1×0 (ou invertido) ou 1×1 para empate.',
-      });
+      ctx.addIssue({ code: 'custom', path: ['scoreSelf'], message: INVALID_SCORE_MESSAGE });
     }
   });
 

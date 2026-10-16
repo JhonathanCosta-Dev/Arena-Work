@@ -1,10 +1,12 @@
+import { INVALID_SCORE_MESSAGE } from '@/features/matches/domain/score';
+
 const messages: Record<string, string> = {
   AUTH_REQUIRED: 'Sua sessão expirou. Entre novamente.',
   USER_INACTIVE: 'Seu acesso está inativo.',
   ADMIN_REQUIRED: 'Apenas administradores podem fazer isso.',
   SELF_MATCH_NOT_ALLOWED: 'Você não pode registrar uma partida contra si mesmo.',
   OPPONENT_NOT_AVAILABLE: 'Esse adversário não está disponível.',
-  INVALID_SCORE: 'Use um placar válido: 2×0, 2×1, 1×0 (ou invertido) ou 1×1 para empate.',
+  INVALID_SCORE: INVALID_SCORE_MESSAGE,
   NO_ACTIVE_SEASON: 'Não há temporada ativa no momento. Fale com um administrador.',
   SEASON_NOT_STARTED: 'A temporada ainda não começou. Confira a data de início na home.',
   SEASON_ENDED: 'O prazo da temporada terminou. Aguarde o administrador abrir a próxima.',

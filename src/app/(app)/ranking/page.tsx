@@ -3,6 +3,7 @@ import { BadLoserTag } from '@/components/ui/bad-loser-tag';
 import { PlayerAvatar } from '@/features/competitive/components/player-badges';
 import { TierBadge } from '@/features/competitive/components/tier-emblem';
 import { getCompetitive } from '@/features/competitive/server/get-competitive';
+import { RankingTabs } from '@/features/ranking/components/ranking-tabs';
 import { getCurrentRanking } from '@/features/ranking/server/get-current-ranking';
 import { requireUser } from '@/lib/auth/require-user';
 import { MEDIA_BUCKETS, mediaUrl } from '@/lib/storage/media';
@@ -19,11 +20,6 @@ export default async function RankingPage({
     getCompetitive(supabase),
   ]);
 
-  const tabs = [
-    { href: '/ranking', label: 'Mês', active: !isElo },
-    { href: '/ranking?tab=elo', label: 'Elo geral', active: isElo },
-  ];
-
   return (
     <section>
       <p className="text-primary text-xs font-black tracking-[0.28em]">RANKING</p>
@@ -38,18 +34,7 @@ export default async function RankingPage({
               : 'Vitórias da temporada. Zera todo mês e define o campeão.'}
           </p>
         </div>
-        <nav aria-label="Tipo de ranking" className="bg-card grid grid-cols-2 gap-1 rounded-xl p-1">
-          {tabs.map((t) => (
-            <Link
-              key={t.href}
-              href={t.href}
-              aria-current={t.active ? 'page' : undefined}
-              className={`rounded-lg px-4 py-2 text-center text-sm font-bold ${t.active ? 'bg-card-elevated text-white' : 'text-muted-foreground hover:text-white'}`}
-            >
-              {t.label}
-            </Link>
-          ))}
-        </nav>
+        <RankingTabs active={isElo ? 'elo' : 'month'} />
       </div>
 
       <div className="mt-6 space-y-2">

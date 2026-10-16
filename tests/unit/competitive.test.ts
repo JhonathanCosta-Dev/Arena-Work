@@ -3,10 +3,11 @@ import { earnedAchievements, topAchievement } from '@/features/competitive/domai
 import {
   competitiveRanking,
   rateMatches,
+  winsNeeded,
   winValue,
   type RatedMatch,
 } from '@/features/competitive/domain/rating';
-import { tierFromPoints } from '@/features/competitive/domain/tiers';
+import { divisionLadder, tierFromPoints, TOP_POINTS } from '@/features/competitive/domain/tiers';
 
 let seq = 0;
 function match(winner: string, loser: string, loserScore = 1, seasonId = 's1'): RatedMatch {
@@ -122,5 +123,34 @@ describe('achievements', () => {
     expect(earned.has('streak_12')).toBe(false);
     expect(topAchievement(earned)?.key).toBe('streak_8');
     expect(topAchievement(earnedAchievements(stats.get('a'), 1))?.key).toBe('champion');
+  });
+});
+
+describe('divisionLadder', () => {
+  it('lists the 30 divisions from Madeira 1 to Imortal 3', () => {
+    const ladder = divisionLadder();
+    expect(ladder).toHaveLength(30);
+    expect(ladder[0]!.label).toBe('Madeira 1');
+    expect(ladder.at(-1)!.label).toBe('Imortal 3');
+    expect(ladder.at(-1)!.minPoints).toBe(TOP_POINTS);
+    expect(TOP_POINTS).toBe(5950);
+  });
+});
+
+describe('winsNeeded', () => {
+  it('is zero when the target is already reached', () => {
+    expect(winsNeeded(300, 150)).toEqual({ inARow: 0, withoutStreak: 0 });
+  });
+
+  it('counts the streak bonus for wins in a row', () => {
+    // 25 + 30 + 35 = 90 >= 75
+    expect(winsNeeded(0, 75)).toEqual({ inARow: 3, withoutStreak: 3 });
+    // 25 + 30 + 35 + 40 + 45 + 50 = 225
+    expect(winsNeeded(0, 225)).toEqual({ inARow: 6, withoutStreak: 9 });
+  });
+
+  it('continues an ongoing streak', () => {
+    // Already 5 in a row: the next wins are worth 50 each.
+    expect(winsNeeded(0, 100, 5)).toEqual({ inARow: 2, withoutStreak: 4 });
   });
 });
