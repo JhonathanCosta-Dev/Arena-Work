@@ -13,6 +13,8 @@ export type AppNotification = {
   createdAt: string;
   readAt: string | null;
   match: MatchSummary | null;
+  /** Set on head-to-head tie notices: the rival to play the tiebreak against. */
+  opponentId: string | null;
 };
 
 export const countUnreadNotifications = cache(async function countUnreadNotifications(
@@ -39,10 +41,11 @@ export async function getNotifications(
     .limit(50);
   if (error) throw error;
 
-  const matchIdOf = (value: unknown) => {
-    const id = (value as { match_id?: unknown } | null)?.match_id;
-    return typeof id === 'string' ? id : null;
+  const stringField = (value: unknown, key: 'match_id' | 'opponent_id') => {
+    const field = (value as Record<string, unknown> | null)?.[key];
+    return typeof field === 'string' ? field : null;
   };
+  const matchIdOf = (value: unknown) => stringField(value, 'match_id');
   const matchIds = [...new Set((data ?? []).map((row) => matchIdOf(row.data)).filter(Boolean))];
   const matches = await getMatchesByIds(supabase, matchIds as string[]);
 
@@ -56,6 +59,7 @@ export async function getNotifications(
       createdAt: row.created_at,
       readAt: row.read_at,
       match: matchId ? (matches.get(matchId) ?? null) : null,
+      opponentId: stringField(row.data, 'opponent_id'),
     };
   });
 }

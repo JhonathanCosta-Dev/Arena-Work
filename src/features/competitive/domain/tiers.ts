@@ -96,3 +96,11 @@ export function tierGroupIndex(key: TierKey) {
 export function tierColor(key: TierKey) {
   return TIERS.find((tier) => tier.key === key)?.color ?? TIERS[0]!.color;
 }
+
+/** Every division from Madeira 1 to Imortal 3, lowest first. */
+export function divisionLadder(): TierInfo[] {
+  return DIVISIONS.map((entry) => tierFromPoints(entry.minPoints));
+}
+
+/** Points where the last division (Imortal 3) starts: the top of the competitive ladder. */
+export const TOP_POINTS = DIVISIONS.at(-1)!.minPoints;

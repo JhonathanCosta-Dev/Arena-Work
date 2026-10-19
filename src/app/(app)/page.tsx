@@ -141,7 +141,12 @@ export default async function DashboardPage() {
           <div className="mt-3 grid gap-3 md:grid-cols-2">
             {recent.length ? (
               recent.map((match) => (
-                <MatchCard key={match.id} match={match} currentUserId={userId} />
+                <MatchCard
+                  key={match.id}
+                  match={match}
+                  currentUserId={userId}
+                  showWinnerLabel
+                />
               ))
             ) : (
               <p className="text-muted-foreground text-sm">

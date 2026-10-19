@@ -143,6 +143,8 @@ export type Database = {
           cancelled_by: string | null;
           cancelled_at: string | null;
           cancellation_reason: string | null;
+          /** 11 or 21 for games scored in points; null for legacy best-of-3 set results. */
+          points_to_win: number | null;
           version: number;
           created_at: string;
           updated_at: string;
@@ -152,6 +154,7 @@ export type Database = {
           season_id: string;
           created_by: string;
           request_id: string;
+          points_to_win?: number | null;
           status?: Database['public']['Enums']['match_status'];
           played_at?: string;
           confirmed_by?: string | null;
@@ -367,6 +370,7 @@ export type Database = {
           p_opponent_id: string;
           p_score_self: number;
           p_score_opponent: number;
+          p_points_to_win: number;
         };
         Returns: string;
       };

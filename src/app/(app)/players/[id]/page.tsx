@@ -4,9 +4,10 @@ import { Pencil } from 'lucide-react';
 import { z } from 'zod';
 import { PlayerAvatar } from '@/features/competitive/components/player-badges';
 import { BadLoserTag } from '@/components/ui/bad-loser-tag';
-import { MatchCard } from '@/features/matches/components/match-card';
-import { getSeasonMatches } from '@/features/matches/server/get-season-matches';
+import { getPlayerSeasonMatches } from '@/features/matches/server/get-season-matches';
+import { PlayerHistory } from '@/features/profile/components/player-history';
 import { ProfileEditForm } from '@/features/profile/components/profile-edit-form';
+import { opponentRecords } from '@/features/ranking/domain/head-to-head';
 import { getCurrentRanking } from '@/features/ranking/server/get-current-ranking';
 import { CompetitiveCard } from '@/features/competitive/components/competitive-card';
 import { TierBadge } from '@/features/competitive/components/tier-emblem';
@@ -15,8 +16,14 @@ import { getCompetitive } from '@/features/competitive/server/get-competitive';
 import { requireUser } from '@/lib/auth/require-user';
 import { MEDIA_BUCKETS, mediaUrl } from '@/lib/storage/media';
 
-export default async function PlayerPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+export default async function PlayerPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ vs?: string }>;
+}) {
+  const [{ id }, { vs }] = await Promise.all([params, searchParams]);
   if (!z.uuid().safeParse(id).success) notFound();
 
   const { userId, supabase } = await requireUser();
@@ -35,11 +42,31 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
   const competitiveData = competitive.player(player.id);
   const highlight = topAchievement(competitiveData.earned);
   const row = ranking.find((entry) => entry.playerId === player.id);
-  const matches = season
-    ? (await getSeasonMatches(supabase, season.id, { statuses: ['confirmed'] }))
-        .filter((match) => match.players.some((p) => p.profileId === player.id))
-        .slice(0, 10)
-    : [];
+  const matches = season ? await getPlayerSeasonMatches(supabase, season.id, player.id) : [];
+  const personOf = (profileId: string) => {
+    const profile = competitive.profileById.get(profileId);
+    return {
+      id: profileId,
+      name: profile?.name ?? 'Jogador',
+      avatarPath: profile?.avatar_path ?? null,
+    };
+  };
+  const records = opponentRecords(
+    player.id,
+    matches.map((match) => ({
+      id: match.id,
+      playedAt: match.playedAt,
+      sides: [
+        { playerId: match.players[0].profileId, score: match.players[0].score },
+        { playerId: match.players[1].profileId, score: match.players[1].score },
+      ],
+    })),
+  ).map((record) => {
+    const person = personOf(record.opponentId);
+    return { ...record, name: person.name, avatarPath: person.avatarPath };
+  });
+  const selected =
+    vs && vs !== player.id && competitive.profileById.has(vs) ? personOf(vs) : null;
   const bannerUrl = mediaUrl(MEDIA_BUCKETS.profile, player.banner_path);
   const avatarUrl = mediaUrl(MEDIA_BUCKETS.profile, player.avatar_path);
 
@@ -136,20 +163,15 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
         </details>
       ) : null}
 
-      <section aria-labelledby="player-matches">
-        <h2 id="player-matches" className="text-lg font-black">
-          Partidas na temporada
-        </h2>
-        <div className="mt-3 grid gap-3 md:grid-cols-2">
-          {matches.length ? (
-            matches.map((match) => (
-              <MatchCard key={match.id} match={match} currentUserId={userId} />
-            ))
-          ) : (
-            <p className="text-muted-foreground text-sm">Nenhuma partida confirmada ainda.</p>
-          )}
-        </div>
-      </section>
+      {season ? (
+        <PlayerHistory
+          player={{ id: player.id, name: player.name, avatarPath: player.avatar_path }}
+          viewerId={userId}
+          matches={matches}
+          records={records}
+          selected={selected}
+        />
+      ) : null}
     </div>
   );
 }

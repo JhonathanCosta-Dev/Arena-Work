@@ -42,9 +42,7 @@ export default async function MatchesPage({
           role="status"
           className="border-success/40 bg-success/10 text-success rounded-2xl border p-4 text-sm"
         >
-          {registered === 'draw'
-            ? 'Empate registrado! Vocês dois foram avisados: joguem o desempate e registrem o resultado.'
-            : 'Partida registrada! Ela entra no ranking assim que o seu adversário confirmar.'}
+          Jogo registrado! Ele entra no ranking assim que o seu adversário confirmar.
         </p>
       ) : null}
 
@@ -79,7 +77,7 @@ export default async function MatchesPage({
       {awaiting.length ? (
         <section aria-labelledby="awaiting">
           <h2 id="awaiting" className="text-lg font-black">
-            Enviadas por você, em disputa e empates
+            Enviados por você, em disputa e empates antigos
           </h2>
           <div className="mt-3 space-y-3">
             {awaiting.map((match) => (

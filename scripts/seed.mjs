@@ -116,10 +116,11 @@ if (!seasonId) {
   seasonId = season.id;
 }
 
+// Individual games scored in points (to 11, win by 2).
 const fixtures = [
-  ['00000000-0000-4000-8000-000000000001', 'Jhonathan', 2, 'Pedro', 1],
-  ['00000000-0000-4000-8000-000000000002', 'Lucas', 0, 'Marcos', 2],
-  ['00000000-0000-4000-8000-000000000003', 'Pedro', 2, 'Lucas', 0],
+  ['00000000-0000-4000-8000-000000000001', 'Jhonathan', 11, 'Pedro', 8],
+  ['00000000-0000-4000-8000-000000000002', 'Lucas', 9, 'Marcos', 11],
+  ['00000000-0000-4000-8000-000000000003', 'Pedro', 12, 'Lucas', 10],
 ];
 
 for (const [requestId, aName, aScore, bName, bScore] of fixtures) {
@@ -140,6 +141,7 @@ for (const [requestId, aName, aScore, bName, bScore] of fixtures) {
       season_id: seasonId,
       created_by: createdBy,
       request_id: requestId,
+      points_to_win: 11,
       status: 'confirmed',
       confirmed_by: opponent,
       confirmed_at: new Date().toISOString(),

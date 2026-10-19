@@ -4,7 +4,6 @@ import { useRef, useState, useTransition } from 'react';
 import { CircleCheckBig, Crown, Frown, ShieldAlert, X } from 'lucide-react';
 import { PlayerAvatar } from '@/features/competitive/components/player-badges';
 import { BadLoserTag } from '@/components/ui/bad-loser-tag';
-import { markNotificationRead } from '@/features/notifications/actions/mark-read';
 import { formatDateTime } from '@/lib/dates';
 import { MEDIA_BUCKETS, mediaUrl } from '@/lib/storage/media';
 import { confirmMatch } from '../actions/confirm-match';
@@ -16,8 +15,6 @@ type Step = 'review' | 'refuse' | 'accepted' | 'refused';
 type ConfirmMatchDialogProps = {
   match: MatchSummary;
   currentUserId: string;
-  /** Marked as read when the dialog opens. */
-  notificationId?: string | undefined;
   triggerClassName: string;
   children: React.ReactNode;
 };
@@ -61,7 +58,6 @@ function PlayerColumn({
 export function ConfirmMatchDialog({
   match,
   currentUserId,
-  notificationId,
   triggerClassName,
   children,
 }: ConfirmMatchDialogProps) {
@@ -83,7 +79,6 @@ export function ConfirmMatchDialog({
     setStep('review');
     setError(null);
     dialogRef.current?.showModal();
-    if (notificationId) void markNotificationRead(notificationId);
   }
 
   function close() {
